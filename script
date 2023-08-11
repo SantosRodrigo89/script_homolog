@@ -1,0 +1,51 @@
+(() => {
+    const requestId = ObjectId('64aea7456662c522151d5a09');
+    const getCollection = (bd, col) => { return db.getSiblingDB(bd).getCollection(col); }
+    const business = getCollection('business', 'requests');
+    const businessData = business.findOne({ _id: requestId }, { experience: 1, data: 1, status: 1 })
+    const payment = getCollection('bonuz', 'payments');
+    const paymentData = payment.findOne({ "reward.request.id": requestId.str }, { mobile: 1.0, status: 1.0, deliveryEngine: 1.0, "coupon.code": 1.0, "deal.name": 1.0 })
+    const notification = getCollection("hub", "notifications");
+    if (!paymentData.coupon && !paymentData.coupon.data) {
+        return print("Não foi gerado coupon no payment")
+    }
+    const notificationData = notification.findOne({ "properties.voucher": paymentData.coupon.code }, {
+        "properties.mobile": 1.0,
+        "properties.prizeName": 1.0,
+        "properties.voucher": 1.0,
+        "properties.experience.name": 1.0,
+        "status.name": 1.0,
+        channel: 1.0,
+        text: 1.0,
+        coupon: 1.0
+    });
+
+    let result =
+        'requestId: '+ requestId +
+        '\n' +
+        '\n****************REQUESTS****************' +
+        '\nRequest - Experience: ' + businessData.experience.name +
+        '\nRequest - Data:' + JSON.stringify(businessData.data, null, 8) +
+        '\nRequest - Status: ' + businessData.status.name +
+        '\n-----------------------------------\n' +
+        '\n' +
+        '****************PAYMENTS****************' +
+        '\nPayment - Mobile : ' + paymentData.mobile +
+        '\nPayment - Status : ' + JSON.stringify(paymentData.status, null, 8) +
+        '\nPayment - DeliveryEngine : ' + paymentData.deliveryEngine +
+        '\nPayment - Coupon : ' + paymentData.coupon.code +
+        '\nPayment - Deal : ' + paymentData.deal.name +
+        '\n-----------------------------------\n' +
+        '\n' +
+    '****************NOTIFICATIONS****************' +
+        '\nNotificantion - Mobile : ' + notificationData.properties.mobile +
+        '\nNotificantion - Prize Name : ' + notificationData.properties.prizeName +
+        '\nNotificantion - Voucher : ' + notificationData.properties.voucher +
+        '\nNotificantion - Experience : ' + notificationData.properties.experience.name +
+        '\nNotificantion - Status : ' + notificationData.status.name +
+        '\nNotificantion - Channel : ' + notificationData.channel +
+        '\nNotificantion - Text : ' + notificationData.text +
+        '\nNotificantion - Coupon : ' + notificationData.coupon +
+        '\n-----------------------------------\n';
+    print(result)
+})()
